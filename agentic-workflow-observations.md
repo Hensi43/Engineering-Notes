@@ -42,3 +42,17 @@ Ideally, a monorepo is "one repo to rule them all." In reality, it's "one repo t
 
 **Reflection**
 Monorepos solve the "where is everything?" problem but introduce the "how do I run everything?" problem. It was a stark contrast to the `engineering-notes` repo I'm in right now, which is simple. The difference between a controlled environment and reality—which I wrote about in "Mock Data is a Lie"—isn't just philosophy; it was my exact morning.
+
+# 2025-12-27: The "Just Styling" Trap
+
+**The Goal**
+Fix the visual glitches on the mobile app. Make it look like the design. Simple CSS work, right?
+
+**The Trap**
+I underestimated the "Native" in React Native.
+*   **Babel Hell:** `NativeWind` isn't just a library; it's a compiler hack. If your Babel config is slightly off, styles fail silently.
+*   **The Mobile Feedback Loop:** Change code -> Save -> Bundler rebuilds -> Simulator reloads. It’s 10x slower than the DOM.
+*   **Invisible Errors:** The app crashes with cryptic messages because I imported a web-only component.
+
+**Takeaway**
+On the web, we are spoiled. The browser swallows our mistakes. In mobile land, the environment is hostile. You can't just "hack it" until it works; you have to understand the build pipeline.
