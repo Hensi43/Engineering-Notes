@@ -56,3 +56,11 @@ I underestimated the "Native" in React Native.
 
 **Takeaway**
 On the web, we are spoiled. The browser swallows our mistakes. In mobile land, the environment is hostile. You can't just "hack it" until it works; you have to understand the build pipeline.
+
+# 2026-01-02: The Semester Hiatus
+
+**The Silence**
+The repo has been quiet. Not abandoned, just paused. The semester demanded full attention—studying for papers in Cryptography, Project Management, and Biomedical Instrumentations took priority over the "green squares" on GitHub.
+
+**The Restart**
+There's always a bit of friction when restarting after a few weeks off. The context switching cost is real. But the best way to resume is simply to write something. This entry is the commit that breaks the silence. I was studying, I couldn't commit, but I'm back now.
