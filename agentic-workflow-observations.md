@@ -82,6 +82,11 @@ It wasn't just moving files. I had to strictly separate Pydantic schemas (data s
 **UI Refactor**
 I also cleaned up the Auth flow. Instead of a janky "check token then render," I implemented a proper loading state that blocks the UI until the user session is confirmed. Authenticating is a state, not just a side effect.
 
+**The "Perfect Paper" Paradigm**
+We shifted the grading logic. Instead of asking the AI to "grade this math problem," we now ask it to "compare this submission to the Perfect Paper."
+*   **The Shift:** From absolute grading (knowing the answer) to relative grading (matching the reference).
+*   **The Result:** Drastically reduced hallucinations. The AI doesn't need to know math; it just needs to know what a correct match looks like.
+
 # 2026-01-03: The Database Handshake
 
 **The Context**
