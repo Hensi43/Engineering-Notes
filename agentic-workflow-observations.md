@@ -65,6 +65,23 @@ The repo has been quiet. Not abandoned, just paused. The semester demanded full 
 **The Restart** 
 There's always a bit of friction when restarting after a few days off. The context switching cost is real. But the best way to resume is simply to write something. This entry is the commit that breaks the silence. I was studying, I couldn't commit, but I'm back now.
 
+# 2026-01-02: The Circular Dependency Trap
+
+**The Context**
+While refining the `exam-evaluator`, I hit a classic wall: Circular Imports in Python.
+*   `User` model depends on `Exam`.
+*   `Exam` model depends on `User`.
+*   Result: `ImportError` at startup.
+
+**The Fix**
+It wasn't just moving files. I had to strictly separate Pydantic schemas (data shapes) from ORM models (database tables).
+*   **Schemas:** Pure data validation. No logic.
+*   **Models:** Database relationships.
+*   **TYPE_CHECKING:** Using Python's `if TYPE_CHECKING:` block to allow the IDE to see the types without confusing the runtime interpreter.
+
+**UI Refactor**
+I also cleaned up the Auth flow. Instead of a janky "check token then render," I implemented a proper loading state that blocks the UI until the user session is confirmed. Authenticating is a state, not just a side effect.
+
 # 2026-01-03: The Database Handshake
 
 **The Context**
