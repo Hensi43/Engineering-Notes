@@ -62,5 +62,18 @@ On the web, we are spoiled. The browser swallows our mistakes. In mobile land, t
 **The Silence**
 The repo has been quiet. Not abandoned, just paused. The semester demanded full attention—studying for papers in Cryptography, Project Management, and Biomedical Instrumentations took priority over the "green squares" on GitHub.
 
-**The Restart**
-There's always a bit of friction when restarting after a few weeks off. The context switching cost is real. But the best way to resume is simply to write something. This entry is the commit that breaks the silence. I was studying, I couldn't commit, but I'm back now.
+**The Restart** 
+There's always a bit of friction when restarting after a few days off. The context switching cost is real. But the best way to resume is simply to write something. This entry is the commit that breaks the silence. I was studying, I couldn't commit, but I'm back now.
+
+# 2026-01-03: The Database Handshake
+
+**The Context**
+I spent today transforming FormSync into a real SaaS. The headline feature? "Google Integration." The reality? A deep dive into database linking.
+
+**The "Just Add Auth" Myth**
+It’s easy to think of authentication as a UI widget. You drop in a "Sign in with Google" button, and you're done. But in the `@/update` workflow, I had to confront the backend reality.
+*   **Identity vs. Record:** Google verifies the *identity*, but my Supabase database needs a *record*. Bridging that gap—ensuring the Google token actually resolves to a row in the `users` table—is where the real engineering happens.
+*   **The Clean Up:** I also had to scrub the codebase of hardcoded secrets and unused artifacts. It wasn't glamorous.
+
+**The Verdict**
+The UI is just the tip of the iceberg. The "Google Integration" didn't truly exist until the database handshake was confirmed. Until the user is a row in the database, the feature is just a mirage.
