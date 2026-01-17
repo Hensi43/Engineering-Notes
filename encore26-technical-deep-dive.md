@@ -1,10 +1,10 @@
-# Encore 25: Technical Deep Dive & Architectural Highlights
+# Encore 26: Technical Deep Dive & Architectural Highlights
 
-**Project:** Encore 25 Official Web Portal
-**Stack:** Node.js, Express, Vanilla JS + GSAP, TailwindCSS, LowDB
+**Project:** Encore 26 Official Web Portal
+**Stack:** Next.js, Node.js, Express, Vanilla JS + GSAP, TailwindCSS, LowDB
 
 ## Executive Summary
-This document outlines the key engineering decisions and technical features of the Encore 25 platform. It is designed to showcase the system's interactive capabilities, security measures, and pragmatic architectural choices to technical stakeholders.
+This document outlines the key engineering decisions and technical features of the Encore 26 platform. It is designed to showcase the system's interactive capabilities, security measures, and pragmatic architectural choices to technical stakeholders.
 
 ## 1. Frontend Architecture & Markup Standards
 
@@ -58,6 +58,27 @@ This document outlines the key engineering decisions and technical features of t
     1.  **Pre-Order:** Before generating a Razorpay Order ID.
     2.  **Post-Verify:** Atomically updating the `paymentStatus` to `'paid'` with a timestamp. 
     *   *Result:* This robust state management ensures that even if a frontend client sends multiple requests, the database remains consistent with a single source of truth for payment status.
+
+## 6. Encore 26 Updates & Enhancements (Jan 2026)
+
+### Core Refinements
+*   **Authentication Overhaul:** Pivoted to a robust credentials-only authentication flow, removing Google Sign-In to streamline the user onboarding experience and reduce external dependencies.
+*   **Next.js Integration:** Adopted Next.js for the core web portal to leverage server-side rendering (SSR) and improved routing architecture.
+
+### Admin Powers
+*   **Enhanced User Management:** Built a comprehensive Admin Dashboard (`/admin`), enabling administrators to:
+    *   **Edit Users:** Update user details directly via a modal interface (`PUT /api/admin/users`).
+    *   **Delete Users:** Securely remove accounts with confirmation workflows (`DELETE /api/admin/users`).
+    *   **Password Management:** Capabilities to hash and reset user passwords from the admin panel.
+
+### Visual Polish & UX
+*   **"Nawabi Elegance" Theme:** Implemented a distinct visual identity centered around Lucknow's heritage.
+*   **Immersive Effects:**
+    *   **Parallax Backgrounds:** Added depth with a "Roomi Darwaza" popping effect in the hero section.
+    *   **Custom Cursor:** Developed a golden cursor with a trailing effect to enhance interactivity.
+*   **Flow Optimization:**
+    *   **Enter Key Support:** Enabled form submission via the Enter key across login and registration flows.
+    *   **Auto-Close Modals:** Improved UX by automatically closing success modals upon action completion.
 
 ---
 *This architecture demonstrates a balance between "Wow Factor" visual capability and "Boring but Reliable" backend systems—ensuring a stable platform for thousands of student users.*
