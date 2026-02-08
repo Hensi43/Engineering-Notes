@@ -1,84 +1,76 @@
 # Encore 26: Technical Deep Dive & Architectural Highlights
 
 **Project:** Encore 26 Official Web Portal
-**Stack:** Next.js, Node.js, Express, Vanilla JS + GSAP, TailwindCSS, LowDB
+**Stack:** Next.js 16 (App Router), Node.js, Prisma ORM, MySQL, TailwindCSS v4, Framer Motion
+**Infrastructure:** NetWarden (Traffic Control), Vercel/Render (Deployment)
 
 ## Executive Summary
-This document outlines the key engineering decisions and technical features of the Encore 26 platform. It is designed to showcase the system's interactive capabilities, security measures, and pragmatic architectural choices to technical stakeholders.
+This document outlines the key engineering decisions and technical features of the Encore 26 platform. It highlights the transition to a robust relational architecture, the implementation of advanced traffic control systems, and the focus on immersive, high-performance UI.
 
-## 1. Frontend Architecture & Markup Standards
+## 1. Frontend Architecture & Modern Web Standards
 
-### Semantic HTML5 & SEO Optimizations
-*   **Semantic Structure:** Usage of proper landmark elements (`<nav>`, `<section>`, `<main>`) ensures the site is accessible to screen readers and indexable by crawlers.
-*   **Social Graph Integration:** Explicit `meta` tags (Open Graph) and semantic `alt` attributes on all dynamic imagery (e.g., "IET Logo", "Concert Crowd") ensure the content is shareable and accessible.
-*   **Performance Hints:** Implemented `<link rel="preconnect">` for Google Fonts and critical assets to reduce round-trip times during the initial SSL handshake, speeding up content painting.
+### Next.js 16 & Server Components
+*   **App Router Paradigm:** leveraged React Server Components (RSC) to reduce client-side bundle size. Critical rendering logic happens on the server, ensuring fast First Contentful Paint (FCP).
+*   **Streaming & Suspense:** Implemented granular loading states with `Suspense` boundaries, allowing parts of the UI (like the Event Dashboard) to load progressively without blocking the entire page.
 
-### Utility-First CSS (Tailwind)
-*   **Scalable Design Tokens:** Configured custom Tailwind themes (color palette, spacing) to ensure visual consistency across the "dark mode" aesthetic (`bg-black`, `text-[#FFA500]`).
-*   **Zero-Runtime Overhead:** Unlike CSS-in-JS solutions, Tailwind compiles to atomic CSS classes at build time, resulting in a minimal bundle size and zero JavaScript blocking time for styling.
+### Utility-First CSS (Tailwind v4)
+*   **Scalable Design Tokens:** Configured custom Tailwind themes to ensure visual consistency across the "dark mode" aesthetic (`bg-black`, `text-[#D4AF37]` for gold accents).
+*   **Zero-Runtime Overhead:** Tailwind v4's new engine compiles styles instantly, keeping the CSS bundle minimal and preventing layout shifts.
 
-## 1.2 Immersive User Experience (Frontend)
+## 1.2 Immersive User Experience
 
 ### High-Performance Animations
-*   **GSAP Integration:** Leveraged the GreenSock Animation Platform (GSAP) for complex, timeline-based sequences—specifically the seamless cross-fading of hero images and synchronized text updates ("Nawabi Elegance" section).
-*   **3D Transform Engine:** Implemented hardware-accelerated CSS3 3D transforms (`preserve-3d`, `rotateY`, `perspective: 1000px`) for card-flip interactions, ensuring 60fps performance on mobile devices without heavy WebGL overhead.
-*   **Intersection Observers:** Integrated the `IntersectionObserver` API to trigger entrance animations only when elements enter the viewport. This reduces the main thread blocking time during initial page load, significantly improving Core Web Vitals (LCP/FID).
+*   **Framer Motion:** Replaced heavy external libraries with `framer-motion` for layout animations and shared element transitions.
+*   **3D Transform Engine:** Implemented hardware-accelerated CSS3 3D transforms for card-flip interactions and the "Hero Parallax", ensuring 60fps performance on mobile devices.
+*   **Intersection Observers:** Lazy-loaded heavy assets and animations only when elements enter the viewport, improving Core Web Vitals.
 
 ### Responsive Design System
-*   **Mobile-First Strategy:** Built using TailwindCSS with a mobile-first philosophy, ensuring the "hamburger" menus, touch targets, and grid layouts naturally adapt from iPhone SE sizes up to 4K desktops.
-*   **Adaptive Coverflow:** The event carousel uses a custom Swiper.js configuration (`effect: 'coverflow'`) that dynamically adjusts depth (`depth: 100`) and rotation based on the screen width, maintaining immersion across devices.
+*   **Mobile-First Strategy:** Built using a mobile-first philosophy, ensuring layouts adapt naturally from iPhone SE sizes up to 4K desktops.
 
 ## 2. Backend & Data Architecture
 
-### Pragmatic Persistence Layer (LowDB)
-*   **Decision:** Opted for `LowDB` (local JSON persistence) over a heavy SQL database.
+### Robust Relational Data (Prisma + MySQL)
+*   **Decision:** Migrated from `LowDB` to **MySQL** managed via **Prisma ORM**.
 *   **Rationale:**
-    *   **Zero-Latency Reads:** Data resides in memory, providing sub-millisecond read speeds for high-traffic read operations (e.g., fetching event lists).
-    *   **Portability:** The entire database state is atomic and version-controllable, making backups and migrations (e.g., moving from local to Render) trivial.
-    *   **Concurrency Handling:** Uses atomic file writes `await db.write()` to ensure data integrity during concurrent registrations.
+    *   **Referential Integrity:** Enforced strict relationships between Users, Carts, Orders, and Teams.
+    *   **Type Safety:** Prisma's generated client provides end-to-end type safety, reducing runtime errors.
+    *   **Scalability:** MySQL handles concurrent write operations (e.g., hundreds of students registering simultaneously) significantly better than file-based systems.
+
+### Complex Schema Features
+*   **Atomic Transactional Orders:** The `Order` system links securely to `Payment` verification. Statuses transition atomically (`PENDING` -> `PAID`) to prevent race conditions.
+*   **Team Management:** Implemented a robust Team system where a `User` can lead a `Team` (`@@unique([eventSlug, leaderId])`) or be a member, with strict constraints to prevent duplicate registrations.
+*   **Ledger-Based Rewards:** The `CoinHistory` table acts as an immutable ledger for "Nawabi Coins", tracking every earning (Instagram task) and spending event with a clear audit trail.
 
 ### Secure Payment Pipeline
-*   **Razorpay Integration:** Full full-stack integration with the Razorpay Payment Gateway.
-*   **HMAC Signature Verification:** Implemented **cryptographic verification** of payment success on the server side (`crypto.createHmac('sha256', secret)`).
-    *   *Why this matters:* Prevents "client-side spoofing" where a user might intercept the frontend success callback to fake a payment. The server independently verifies the Razorpay signature before granting the "Fest Pass".
-*   **Dev/Prod Parity:** Engineered a `ENABLE_FAKE_PAYMENT` toggle. This allows the engineering team to test the entire booking flow end-to-end (including DB writes and state updates) without requiring active banking credentials, speeding up the dev loop.
+*   **Razorpay Integration:** Full stack integration with Razorpay.
+*   **HMAC Signature Verification:** Implemented cryptographic verification (`crypto.createHmac`) on the server to prevent client-side payment spoofing.
+*   **Double-Verification Strategy:**
+    1.  **Pre-Order:** Verify stock/eligibility before generating an Order ID.
+    2.  **Post-Verify:** Atomically update `Order` status and grant `Team` access only after successful signature validation.
 
-## 3. Security & Scalability Notables
-*   **UUID Generation:** Uses `crypto.randomUUID()` for non-collision user IDs, ensuring scalability if the user base grows into the thousands.
-*   **CORS Configuration:** Explicit `cors()` middleware usage with strict origin policies (configurable) to prevent XSS/CSRF attacks from unauthorized domains.
-*   **Modular Routing:** API logic (`/api/register`, `/api/login`) is decoupled from static asset serving, allowing the backend to potentially be split into a microservice in future iterations.
+## 3. Infrastructure & Traffic Control (NetWarden)
 
-## 4. Modern Development Practices
-*   **ES Modules (ESM):** The backend is fully migrated to modern ECMAScript Modules (`"type": "module"`), using `import`/`export` syntax over legacy CommonJS. This aligns the codebase with future Node.js standards and allows for tree-shaking optimizations if bundled later.
-*   **Hot Reloading:** Configured `nodemon` with specific ignore rules (`--ignore db/`) to prevent the server from restarting when the local JSON database is written to. This prevents "restart loops" during development persistence testing, a common pitfall with file-system-based databases.
+### NetWarden Integration
+*   **Role:** Users custom Python-based traffic control system (`netwarden`) to manage network stability during high-traffic events (e.g., registration opening).
+*   **Traffic Classification:** Uses `TrafficClassifier` to identify packet types based on SNI and flow patterns.
+*   **Dynamic Throttling:** The `SystemThrottler` enforces bandwidth policies (`configs/policy.yaml`), ensuring that admin tools and SSH sessions (`class: high`) get priority over bulk downloads or background syncs (`class: low`).
+*   **Fairness Algorithms:** Implements logic to "punish hogs"—automatically throttling IP addresses or internal processes that exceed fair-use bandwidth limits (`hog_threshold_mbps`).
 
-## 5. Key Engineering Challenge: The "Double-Spend" Problem
-*   **The Problem:** In high-concurrency scenarios (e.g., hundreds of students registering at once), checking if a user has "Already Paid" before creating a new order can lead to race conditions.
-*   **The Solution:** Implemented a state-check mechanism where the payment status is verified *twice*:
-    1.  **Pre-Order:** Before generating a Razorpay Order ID.
-    2.  **Post-Verify:** Atomically updating the `paymentStatus` to `'paid'` with a timestamp. 
-    *   *Result:* This robust state management ensures that even if a frontend client sends multiple requests, the database remains consistent with a single source of truth for payment status.
+## 4. Security & Scalability
 
-## 6. Encore 26 Updates & Enhancements (Jan 2026)
+-   **CUID Generation:** Switched to CUIDs (`@default(cuid())`) for primary keys. These are collision-resistant and time-sortable, making them superior to standard UUIDs for database indexing.
+-   **Role-Based Access Control (RBAC):** Middleware checks `User.role` (USER vs CA vs ADMIN) to protect sensitive API routes (`/api/admin/*`).
+-   **Rate Limiting:** Implemented API rate limiting to prevent abuse of the registration and login endpoints.
+
+## 5. Encore 26 Updates & Enhancements (Jan 2026)
 
 ### Core Refinements
-*   **Authentication Overhaul:** Pivoted to a robust credentials-only authentication flow, removing Google Sign-In to streamline the user onboarding experience and reduce external dependencies.
-*   **Next.js Integration:** Adopted Next.js for the core web portal to leverage server-side rendering (SSR) and improved routing architecture.
+*   **Authentication Overhaul:** Pivoted to a robust credentials-only authentication flow.
+*   **Admin Dashboard:** Comprehensive `/admin` panel for live user management, payment verification, and manual overrides.
 
-### Admin Powers
-*   **Enhanced User Management:** Built a comprehensive Admin Dashboard (`/admin`), enabling administrators to:
-    *   **Edit Users:** Update user details directly via a modal interface (`PUT /api/admin/users`).
-    *   **Delete Users:** Securely remove accounts with confirmation workflows (`DELETE /api/admin/users`).
-    *   **Password Management:** Capabilities to hash and reset user passwords from the admin panel.
-
-### Visual Polish & UX
-*   **"Nawabi Elegance" Theme:** Implemented a distinct visual identity centered around Lucknow's heritage.
-*   **Immersive Effects:**
-    *   **Parallax Backgrounds:** Added depth with a "Roomi Darwaza" popping effect in the hero section.
-    *   **Custom Cursor:** Developed a golden cursor with a trailing effect to enhance interactivity.
-*   **Flow Optimization:**
-    *   **Enter Key Support:** Enabled form submission via the Enter key across login and registration flows.
-    *   **Auto-Close Modals:** Improved UX by automatically closing success modals upon action completion.
+### Visual Polish
+*   **"Nawabi Elegance" Theme:** A distinct visual identity centered around Lucknow's heritage.
+*   **Interactive Elements:** Custom golden cursor, parallax scrolling, and "Roomi Darwaza" inspired architectural UI elements.
 
 ---
-*This architecture demonstrates a balance between "Wow Factor" visual capability and "Boring but Reliable" backend systems—ensuring a stable platform for thousands of student users.*
+*This architecture demonstrates a shift from a prototype-based stack to a production-ready, scalable relational system capable of handling thousands of concurrent users.*
